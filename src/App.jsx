@@ -1,4 +1,4 @@
-import Table from './components/Table';
+import MaterialTable from './components/MaterialTable';
 import './App.css';
 
 function App() {
@@ -6,7 +6,7 @@ function App() {
     <div className="App">
        <Header/>
        <Welcome/>
-       <Table/>
+       <MaterialTable/>
     </div>
   );
 }

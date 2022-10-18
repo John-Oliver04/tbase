@@ -1,92 +1,175 @@
-import React, {useRef, useEffect, useState} from 'react';
-import {read, utils, writeFile} from 'xlsx';
+import React, { useState } from "react";  
+import { read, utils, writeFile } from 'xlsx';
 
 const Table = () => {
-    const ref = useRef(null);
-    const Header=[];
-     
-    const [tData, setTData] = useState([]);
+    const [datas, setData] = useState([]);
+    const [dup, setDup] = useState([]);
+    const [names, setName] = useState("");
 
-    useEffect(()=>{
-        const handleClick = event =>{
-            //************* E X C E L  F I L E ****************
-            if(!['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'].includes(event.target.files[0].type))
-            {
-                
-                document.getElementById('excel_data').innerHTML = '<div class="alert alert-danger">Only .xlsx or .xls file format are allowed</div>';   
-                element.value = '';
-                return false;
-            }
-
+    const handleImport = ($event) => {
+        const files = $event.target.files;
+        if (files.length) {
+            const file = files[0];
             const reader = new FileReader();
-            reader.readAsArrayBuffer(event.target.files[0]);
-            
-            reader.onload = function(event){
-                const data = new Uint8Array(reader.result);
-                const work_book = read(data, {type:'array'});
-                const sheet_name = work_book.SheetNames;
-                const sheet_data = utils.sheet_to_json(work_book.Sheets[sheet_name[0]], {header:1});
-                //setTData(sheet_data);
-               console.log('data length:', sheet_data.length)
-                if(sheet_data.length > 0){
-                    for(let row = 0; row < 1; row++){
-                        for(let col = 0; col < sheet_data[0].length; col++){
-                            //Header = sheet_data[row][col];
-                            console.log(sheet_data[row][col]);
-                        }
-                    }                                      
+            reader.onload = (event) => {
+                const wb = read(event.target.result);
+                const sheets = wb.SheetNames;
+
+                if (sheets.length) {
+                    const rows = utils.sheet_to_json(wb.Sheets[sheets[0]]);
+                    setData(rows)
                 }
-                 
-
-                    const wb = utils.book_new();
-                    const ws = utils.json_to_sheet([]);
-                    utils.sheet_add_aoa(ws, Header);
-                    utils.sheet_add_json(ws, tData, { origin: 'A2', skipHeader: true });
-                    //utils.book_append_sheet(wb, ws, 'Report');
-                    //writeFile(wb, 'Report.xlsx');
-                 
-                    
-    
             }
+            reader.readAsArrayBuffer(file);
         }
-            //************* E X C E L  F I L E ****************
-      
-        const element = ref.current;
-        element.addEventListener('change', handleClick);
-        element.classList.add('bg-success');
+    }
 
-        return () =>{
-            element.removeEventListener('change', handleClick);
-        }
-    }, []);
+    const handleExport = () => {
+        const headings = [[
+            'Movie',
+            'Category',
+            'Director',
+            'Rating'
+        ]];
+        const wb = utils.book_new();
+        const ws = utils.json_to_sheet([]);
+        utils.sheet_add_aoa(ws, headings);
+        utils.sheet_add_json(ws, datas, { origin: 'A2', skipHeader: true });
+        utils.book_append_sheet(wb, ws, 'Report');
+        writeFile(wb, 'Report.xlsx');
+    }
+
+    // const getdup = datas.map((data,index)=>{
+    //    return (
+    //     setDup(JSON.stringify(data.FIRSTNAME + " " + data.LASTNAME))
+        
+    //    )
+    // });
+
+   
 
 
-  return (
-    <div>
-        <input type="file" ref={ref} name="" id="excel_file" />
-        <div className="excel_data">
-            <div>
-                 <div>
-                    {
-                        // tData.length
-                        // ? 
-                        // tData.map((data,index)=>{
-                        //     <div className="">
-                        //        <div className="">{Header}</div>
-                               
-                        //     </div>
+     
+
+    return (
+        <>
+            <div className="container ">
+                
+                <div className="d-flex border shadow mb-3">
+                     
+                        <div className="col bg-secondary p-3 d-flex">
+                            <div className="custom-file">
+                                <input type="file" name="file" className="custom-file-input" id="inputGroupFile" required onChange={handleImport}
+                                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"/>
+                                
+                            </div>
+                            <div className="">
+                                <button onClick={handleExport} className="btn btn-dark shadow">
+                                    Export <i className="fa fa-download"></i>
+                                </button>    
+                            </div>
+                        </div>
+                        <div className="col bg-secondary p-3 d-flex  flex-row-reverse">
                             
-                        //     //console.log(Header)
-                        // })
-                        // : 
-                        // 'no data'
-                    }
-                 </div>
+                            <div className="d-inline-flex shadow">
+                                <input className="outline-0 border-0 ps-auto" type="text" name="" id="" />
+                                <button className="btn btn-dark">Search</button>
+                            </div>
+                            
+                           
+                        </div>
+                    
+                </div>
             </div>
-           
-        </div>
-    </div>
-  )
-}
+            
+            <div className=" container overflow-scroll">
+                <div className="d-flex m-1">
+                    <label htmlFor="suspected ">Duplicate Names: </label>
+                    <button className="border-0 bg-white rounded-circle"><span id="suspected" className=" py-2 badge bg-warning justify-content-center rounded-circle">5</span></button>
+                    <label htmlFor="suspected">Duplicate ID Number: </label>
+                    <button className="border-0 bg-white rounded-circle"><span id="suspected" className=" py-2 badge bg-danger justify-content-center rounded-circle">2</span></button>
+                
+                </div> 
+                    <table className="table table-striped table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">NO</th>
+                                <th scope="col">ADL</th>
+                                <th scope="col">LAST_NAME</th>
+                                <th scope="col">FIRST_NAME</th>
+                                <th scope="col">MIDDLE_NAME</th>
+                                <th scope="col">EXT NAME</th>
+                                <th scope="col">FIRST_/_LAST_NAME</th>
+                                <th scope="col">BIRTHDAY</th>
+                                <th className="" >ADDRESS(Street,Barangay,Municipality,Province,District)</th>
+                                <th scope="col">TYPE_OF_ID</th> 
+                                <th scope="col">ID</th>
+                                <th scope="col">CONTACTS</th>
+                                <th scope="col">E-PAYMENT/BANK ACC #</th>
+                                <th scope="col">TYPE OF BENEFICIARY</th>
+                                <th scope="col">OCCUPATION</th>
+                                <th scope="col">SEX</th>
+                                <th scope="col">CIVIL STATUS</th>
+                                <th scope="col">AGE</th>
+                                <th scope="col">DEPENDENT</th>
+                                <th scope="col">INTERESTED IN SKILLS TRAINING?</th>
+                                <th scope="col">IF YES INDICATE SKILLS</th>
+                                
+                                
+                            </tr>
+                        </thead>
+                        <tbody> 
+                                
+                                {
+                                    datas.length
+                                    ?
+                                    datas.map((data, index) => (
+                                        
+                                        <tr key={index}>
+                                            {/* Set the Full Name to use State Object */}
+                                            {/* {setName(data.FIRSTNAME + " " + data.LASTNAME)} */}
 
-export default Table
+                                            <th scope="row">{ index+1 }</th>
+                                            <td className="text-warning">{data.ADL}</td>
+                                            <td>{data.LASTNAME}</td>
+                                            <td>{data.FIRSTNAME}</td>
+                                            <td>{data.MIDDLENAME}</td>
+                                            <td>{data.EXTNAME}</td>
+                                            <td><b className="text-primary">{data.FIRSTNAME} {data.LASTNAME}</b> </td>
+                                            <td>{data.BIRTHDAY}</td>
+                                            <td>
+                                                <small>Street: <b className="text-primary"> {data.STREET} </b> Barangay: <b className="text-primary"> {data.BARANGAY}</b></small><br />
+                                                <small>Municipality: <b className="text-primary"> {data.MUNICIPALITY}</b> Province: <b className="text-primary">{data.PROVINCE}</b> </small><br />
+                                                <small>District: <b className="text-primary"> {data.DISTRICT}</b></small>
+                                                
+                                            </td>
+                                            <td>{data.TYPEOFID}</td>
+                                            <td>{data.IDNUMBER}</td>
+                                            <td>{data.CONTACTS}</td>
+                                            <td>{data.EPAYMENT}</td>
+                                            <td>{data.TYPEOFBENE}</td>
+                                            <td>{data.OCCUPATION}</td>
+                                            <td>{data.SEX}</td>
+                                            <td>{data.CIVILSTATUS}</td>
+                                            <td>{data.AGE}</td>
+                                            <td>{data.BENEFICIARY}</td>
+                                            <td>{data.INTERESTEDINSKILLS}</td>
+                                            <td>{data.SKILLS}</td>
+                                            
+                                        </tr> 
+                                    ))
+                                    :
+                                    <tr>
+                                        <td colSpan="21" className="text-center">No Rows Found.</td>
+                                    </tr> 
+                                }
+                        </tbody>
+                    </table>
+                 
+            </div>
+        </>
+
+    );
+};
+
+export default Table;
